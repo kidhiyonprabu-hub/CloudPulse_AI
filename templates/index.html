@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudPulse AI | Autonomous Cloud Telemetry & Predictive Analytics</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-body">
+
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    <path d="M12 13v6"/>
+                    <path d="m9 16 3-3 3 3"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">CloudPulse <span class="brand-accent">AI</span></span>
+                <span class="brand-tagline">Cloud Telemetry & Predictive Operations</span>
+            </div>
+        </div>
+
+        <div class="nav-status-badge" id="data-status-badge">
+            <span class="status-dot"></span>
+            <span id="data-mode-text">DEMO DATA ACTIVE</span>
+            <span class="dataset-filename" id="dataset-filename-pill">sample_cloud_metrics.csv</span>
+        </div>
+
+        <div class="nav-actions">
+            <button class="btn btn-secondary" id="btn-guide" title="Deep-dive into CO3 and CO5 concepts">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                CO3 &amp; CO5 Guide
+            </button>
+            <button class="btn btn-secondary" id="btn-open-alerts" title="Configure Alert Thresholds">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+                </svg>
+                Alerts Config
+            </button>
+            <button class="btn btn-secondary" id="btn-open-upload" title="Upload custom telemetry CSV">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload CSV
+            </button>
+            <button class="btn btn-secondary" id="btn-export-csv" title="Download telemetry report with predictions">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export Report
+            </button>
+            <button class="btn btn-outline-cyan" id="btn-reset-demo" title="Reset back to standard demo dataset">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+                </svg>
+                Reset Demo
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="dashboard-content">
+
+        <!-- Banner for Demo Notice -->
+        <section class="demo-notice-bar" id="demo-banner">
+            <div class="notice-content">
+                <span class="badge-tag demo-tag">DEMO ENVIRONMENT</span>
+                <span class="notice-text">
+                    You are viewing realistic synthetic cloud cluster telemetry (60 observations, 5-min intervals). 
+                    To analyze production workloads, click <strong>Upload CSV</strong> or download the reference schema.
+                </span>
+            </div>
+            <div class="notice-actions">
+                <button class="btn btn-sm btn-link" id="btn-download-sample-csv">Download Sample CSV</button>
+                <button class="btn-close-banner" id="btn-dismiss-banner">&times;</button>
+            </div>
+        </section>
+
+        <!-- Metric Cards Grid -->
+        <section class="metrics-grid">
+            <!-- CPU Card -->
+            <div class="metric-card card-cyan">
+                <div class="metric-card-header">
+                    <span class="metric-label">CPU Utilization</span>
+                    <span class="metric-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-main-val" id="metric-cpu-current">--%</span>
+                    <span class="metric-trend-badge" id="metric-cpu-status">Normal</span>
+                </div>
+                <div class="metric-progress-track">
+                    <div class="metric-progress-fill" id="metric-cpu-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-stats-row">
+                    <div><span class="stat-lbl">Mean:</span> <span class="stat-val" id="metric-cpu-mean">--%</span></div>
+                    <div><span class="stat-lbl">Peak:</span> <span class="stat-val" id="metric-cpu-max">--%</span></div>
+                    <div><span class="stat-lbl">Min:</span> <span class="stat-val" id="metric-cpu-min">--%</span></div>
+                </div>
+            </div>
+
+            <!-- Memory Card -->
+            <div class="metric-card card-purple">
+                <div class="metric-card-header">
+                    <span class="metric-label">Memory Allocation</span>
+                    <span class="metric-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M6 8V5M10 8V5M14 8V5M18 8V5"/><rect x="2" y="8" width="20" height="8" rx="2"/>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-main-val" id="metric-mem-current">--%</span>
+                    <span class="metric-trend-badge" id="metric-mem-status">Healthy</span>
+                </div>
+                <div class="metric-progress-track">
+                    <div class="metric-progress-fill fill-purple" id="metric-mem-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-stats-row">
+                    <div><span class="stat-lbl">Mean:</span> <span class="stat-val" id="metric-mem-mean">--%</span></div>
+                    <div><span class="stat-lbl">Peak:</span> <span class="stat-val" id="metric-mem-max">--%</span></div>
+                    <div><span class="stat-lbl">Min:</span> <span class="stat-val" id="metric-mem-min">--%</span></div>
+                </div>
+            </div>
+
+            <!-- Storage Card -->
+            <div class="metric-card card-emerald">
+                <div class="metric-card-header">
+                    <span class="metric-label">NVMe Storage Usage</span>
+                    <span class="metric-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-main-val" id="metric-storage-current">--%</span>
+                    <span class="metric-trend-badge badge-emerald" id="metric-storage-status">Available</span>
+                </div>
+                <div class="metric-progress-track">
+                    <div class="metric-progress-fill fill-emerald" id="metric-storage-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-stats-row">
+                    <div><span class="stat-lbl">Mean:</span> <span class="stat-val" id="metric-storage-mean">--%</span></div>
+                    <div><span class="stat-lbl">Peak:</span> <span class="stat-val" id="metric-storage-max">--%</span></div>
+                    <div><span class="stat-lbl">Headroom:</span> <span class="stat-val" id="metric-storage-headroom">--%</span></div>
+                </div>
+            </div>
+
+            <!-- Network Card -->
+            <div class="metric-card card-amber">
+                <div class="metric-card-header">
+                    <span class="metric-label">Network Throughput</span>
+                    <span class="metric-icon-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </span>
+                </div>
+                <div class="metric-value-row">
+                    <span class="metric-main-val" id="metric-net-current">-- <small>Mbps</small></span>
+                    <span class="metric-trend-badge" id="metric-net-status">Active</span>
+                </div>
+                <div class="metric-progress-track">
+                    <div class="metric-progress-fill fill-amber" id="metric-net-bar" style="width: 0%"></div>
+                </div>
+                <div class="metric-stats-row">
+                    <div><span class="stat-lbl">Egress:</span> <span class="stat-val" id="metric-net-egress">-- Mbps</span></div>
+                    <div><span class="stat-lbl">Peak In:</span> <span class="stat-val" id="metric-net-max">-- Mbps</span></div>
+                    <div><span class="stat-lbl">Latency:</span> <span class="stat-val" id="metric-latency">-- ms</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts & Recommendations Twin Panel -->
+        <section class="twin-panel-grid">
+            <!-- Active Alerts Card -->
+            <div class="dashboard-panel alert-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <div class="status-indicator-dot alert-dot"></div>
+                        <h2 class="panel-title">Active Threshold Alerts</h2>
+                    </div>
+                    <button class="btn btn-xs btn-outline" id="btn-quick-config">Configure Limits</button>
+                </div>
+                <div class="panel-body">
+                    <div class="alerts-list" id="active-alerts-container">
+                        <!-- Populated dynamically -->
+                        <div class="alert-empty-state">Evaluating system telemetry against baseline thresholds...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Resource Scaling Recommendations -->
+            <div class="dashboard-panel rec-panel">
+                <div class="panel-header">
+                    <div class="panel-title-wrap">
+                        <span class="ai-sparkle">✨</span>
+                        <h2 class="panel-title">AI Resource Scaling Recommendations</h2>
+                    </div>
+                    <span class="subtle-pill">Rule &amp; Heuristic Engine</span>
+                </div>
+                <div class="panel-body">
+                    <div class="recommendations-list" id="recommendations-container">
+                        <!-- Populated dynamically -->
+                        <div class="alert-empty-state">Computing workload scaling policies...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Primary Telemetry Timeline Chart -->
+        <section class="dashboard-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">Real-Time Cluster Telemetry Streams</h2>
+                    <p class="panel-subtitle">Multi-dimensional resource consumption timeline across compute, memory, and networking</p>
+                </div>
+                <div class="chart-controls">
+                    <span class="filter-label">Stream:</span>
+                    <button class="btn btn-xs btn-filter active" data-metric-filter="all">All Metrics</button>
+                    <button class="btn btn-xs btn-filter" data-metric-filter="cpu">CPU Only</button>
+                    <button class="btn btn-xs btn-filter" data-metric-filter="network">Network Only</button>
+                </div>
+            </div>
+            <div class="panel-body chart-container-large">
+                <canvas id="chart-telemetry-timeline"></canvas>
+            </div>
+        </section>
+
+        <!-- Moving Average Predictive Analytics -->
+        <section class="dashboard-panel">
+            <div class="panel-header flex-between">
+                <div>
+                    <div class="tag-row">
+                        <span class="badge-tag tech-tag">Time-Series Forecast</span>
+                        <h2 class="panel-title">Moving Average Forecast Engine (3, 5, 7 Observations)</h2>
+                    </div>
+                    <p class="panel-subtitle">
+                        Step-ahead recursive predictions $\hat{y}_t = \frac{1}{k}\sum_{i=1}^k y_{t-i}$ comparing response latency and noise filtration
+                    </p>
+                </div>
+                <div class="prediction-toolbar">
+                    <div class="select-group">
+                        <label for="select-forecast-metric">Metric:</label>
+                        <select id="select-forecast-metric" class="custom-select">
+                            <option value="cpu_usage" selected>CPU Utilization (%)</option>
+                            <option value="network_in_mbps">Network Ingress (Mbps)</option>
+                            <option value="memory_usage">Memory Allocation (%)</option>
+                            <option value="latency_ms">Latency (ms)</option>
+                        </select>
+                    </div>
+                    <div class="window-btn-group">
+                        <span class="group-label">Window:</span>
+                        <button class="btn btn-xs btn-window active" data-window="3">3 Obs</button>
+                        <button class="btn btn-xs btn-window" data-window="5">5 Obs</button>
+                        <button class="btn btn-xs btn-window" data-window="7">7 Obs</button>
+                        <button class="btn btn-xs btn-window" data-window="all">Compare All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Future Projection Bar -->
+            <div class="projection-cards-row">
+                <div class="proj-card">
+                    <span class="proj-label">MA-3 Next Step Forecast:</span>
+                    <span class="proj-value cyan-glow" id="next-pred-ma3">--</span>
+                    <span class="proj-hint">Responsive to sudden shifts</span>
+                </div>
+                <div class="proj-card">
+                    <span class="proj-label">MA-5 Next Step Forecast:</span>
+                    <span class="proj-value purple-glow" id="next-pred-ma5">--</span>
+                    <span class="proj-hint">Balanced trend smoothing</span>
+                </div>
+                <div class="proj-card">
+                    <span class="proj-label">MA-7 Next Step Forecast:</span>
+                    <span class="proj-value amber-glow" id="next-pred-ma7">--</span>
+                    <span class="proj-hint">Robust noise suppression</span>
+                </div>
+                <div class="proj-card highlight-card">
+                    <span class="proj-label">Historical MAE Score:</span>
+                    <span class="proj-value emerald-glow" id="best-mae-display">--</span>
+                    <span class="proj-hint" id="best-mae-label">Evaluating optimal window...</span>
+                </div>
+            </div>
+
+            <div class="panel-body chart-container-large">
+                <canvas id="chart-moving-average"></canvas>
+            </div>
+        </section>
+
+        <!-- CO3: Uncertain Network Traffic Prediction & Spike Detection -->
+        <section class="dashboard-panel highlight-border-cyan">
+            <div class="panel-header">
+                <div>
+                    <div class="tag-row">
+                        <span class="badge-tag co3-tag">CO3 OUTCOME</span>
+                        <h2 class="panel-title">CO3: Uncertain Network Traffic Prediction &amp; Dynamic Spike Detection</h2>
+                    </div>
+                    <p class="panel-subtitle">
+                        Quantifying stochastic packet bursts via moving expectation baseline and dynamic uncertainty confidence bounds $(\mu \pm 2\sigma)$
+                    </p>
+                </div>
+                <div class="co3-controls">
+                    <label class="control-label">Sensitivity ($Z$-score):</label>
+                    <select id="select-spike-zscore" class="custom-select-sm">
+                        <option value="1.5">1.5&sigma; (Sensitive)</option>
+                        <option value="2.0" selected>2.0&sigma; (Standard ~95%)</option>
+                        <option value="2.5">2.5&sigma; (High Confidence)</option>
+                        <option value="3.0">3.0&sigma; (Extreme Bursts Only)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- CO3 Explanation Brief -->
+            <div class="co-brief-banner">
+                <div class="brief-icon">💡</div>
+                <div class="brief-content">
+                    <strong>Why Uncertainty Visualization is Essential for Network Traffic (CO3):</strong>
+                    Network ingress is inherently bursty and stochastic due to user flash crowds, scheduled ETL jobs, and DDoS probes. 
+                    A deterministic point forecast fails because it cannot convey variance. 
+                    The shaded cyan band illustrates the <strong>predictive uncertainty envelope</strong> ($\mu_t \pm 2\sigma_t$). 
+                    Points bursting outside this envelope trigger anomaly alarms for proactive autoscaling.
+                </div>
+            </div>
+
+            <!-- CO3 Metric Cards -->
+            <div class="co3-summary-grid">
+                <div class="stat-mini-card">
+                    <span class="mini-label">Total Ingress Spikes</span>
+                    <span class="mini-val rose-glow" id="co3-spike-count">--</span>
+                    <span class="mini-sub" id="co3-spike-percent">--% of timeline</span>
+                </div>
+                <div class="stat-mini-card">
+                    <span class="mini-label">Mean Uncertainty Bandwidth</span>
+                    <span class="mini-val cyan-glow" id="co3-bandwidth-uncertainty">-- Mbps</span>
+                    <span class="mini-sub">Confidence Interval Width</span>
+                </div>
+                <div class="stat-mini-card">
+                    <span class="mini-label">Peak Traffic Surge</span>
+                    <span class="mini-val amber-glow" id="co3-peak-surge">-- Mbps</span>
+                    <span class="mini-sub">Max observed deviation</span>
+                </div>
+                <div class="stat-mini-card">
+                    <span class="mini-label">Global Traffic Volatility (&sigma;)</span>
+                    <span class="mini-val purple-glow" id="co3-volatility">-- Mbps</span>
+                    <span class="mini-sub">Standard deviation</span>
+                </div>
+            </div>
+
+            <div class="panel-body chart-container-large">
+                <canvas id="chart-spike-uncertainty"></canvas>
+            </div>
+
+            <!-- Detected Spikes Table -->
+            <div class="sub-table-wrap">
+                <h4 class="sub-heading">Detected Network Traffic Anomalies &amp; Spike Events</h4>
+                <div class="table-responsive-wrapper">
+                    <table class="custom-table" id="table-detected-spikes">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Observed Ingress</th>
+                                <th>Uncertainty Upper Bound</th>
+                                <th>Excess Traffic</th>
+                                <th>$Z$-Score</th>
+                                <th>Severity</th>
+                                <th>Action Taken</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-spikes">
+                            <tr><td colspan="7" class="text-center">Analyzing traffic distribution for spikes...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- CO5: Chronological Model Validation & Performance Benchmarking -->
+        <section class="dashboard-panel highlight-border-purple">
+            <div class="panel-header">
+                <div>
+                    <div class="tag-row">
+                        <span class="badge-tag co5-tag">CO5 OUTCOME</span>
+                        <h2 class="panel-title">CO5: Chronological Time-Series Model Validation (MAE &amp; RMSE)</h2>
+                    </div>
+                    <p class="panel-subtitle">
+                        Temporal train/test evaluation (75% Train / 25% Test) without data shuffling to benchmark Moving Average performance
+                    </p>
+                </div>
+                <div class="co5-controls">
+                    <label class="control-label">Train/Test Split:</label>
+                    <select id="select-train-ratio" class="custom-select-sm">
+                        <option value="0.70">70% Train / 30% Test</option>
+                        <option value="0.75" selected>75% Train / 25% Test</option>
+                        <option value="0.80">80% Train / 20% Test</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- CO5 Explanation Brief -->
+            <div class="co-brief-banner purple-brief">
+                <div class="brief-icon">📊</div>
+                <div class="brief-content">
+                    <strong>Rigorous Time-Series Validation (CO5):</strong>
+                    Randomized $k$-fold cross-validation is fundamentally flawed for telemetry because temporal ordering matters. 
+                    If we randomly shuffle observations, the model trains on future data points to predict the past (lookahead leakage). 
+                    Here, we train strictly on chronological sequence $[t_0 \dots t_{split}]$ and evaluate out-of-sample on unseen $[t_{split+1} \dots t_n]$.
+                    We compute both <strong>MAE</strong> (linear penalty) and <strong>RMSE</strong> (quadratic penalty penalizing large forecast errors).
+                </div>
+            </div>
+
+            <div class="co5-dashboard-grid">
+                <!-- Bar Chart comparing MAE and RMSE -->
+                <div class="chart-sub-panel">
+                    <h4 class="sub-heading">Model Error Comparison: MAE vs. RMSE</h4>
+                    <div class="chart-container-medium">
+                        <canvas id="chart-validation-comparison"></canvas>
+                    </div>
+                </div>
+
+                <!-- Validation Scorecard Table -->
+                <div class="scorecard-sub-panel">
+                    <h4 class="sub-heading">Chronological Performance Scorecard</h4>
+                    <div class="validation-summary-box" id="val-split-summary">
+                        <div><strong>Total Telemetry Samples:</strong> <span id="val-total-samples">--</span></div>
+                        <div><strong>Training Window:</strong> <span id="val-train-samples">--</span> observations</div>
+                        <div><strong>Test Evaluation Horizon:</strong> <span id="val-test-samples">--</span> observations</div>
+                        <div><strong>Split Timestamp:</strong> <span id="val-split-time">--</span></div>
+                    </div>
+
+                    <table class="custom-table mt-3">
+                        <thead>
+                            <tr>
+                                <th>Model Architecture</th>
+                                <th>MAE Score</th>
+                                <th>RMSE Score</th>
+                                <th>Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-validation-scorecard">
+                            <tr><td colspan="4" class="text-center">Computing temporal validation...</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="formula-box">
+                        <div class="formula-line">
+                            <strong>MAE:</strong> \(\text{MAE} = \frac{1}{m} \sum_{i=1}^m |y_i - \hat{y}_i|\)
+                        </div>
+                        <div class="formula-line">
+                            <strong>RMSE:</strong> \(\text{RMSE} = \sqrt{\frac{1}{m} \sum_{i=1}^m (y_i - \hat{y}_i)^2}\)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CSV Dataset Preview & Live Data Explorer -->
+        <section class="dashboard-panel">
+            <div class="panel-header flex-between">
+                <div>
+                    <h2 class="panel-title">Active Dataset Preview &amp; Explorer</h2>
+                    <p class="panel-subtitle">Review raw telemetry records currently driving the predictive engine</p>
+                </div>
+                <div class="explorer-actions">
+                    <button class="btn btn-sm btn-secondary" id="btn-refresh-preview">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+                        </svg>
+                        Reload Table
+                    </button>
+                    <button class="btn btn-sm btn-outline-cyan" id="btn-trigger-upload-modal">Upload New CSV</button>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <div class="table-responsive-wrapper">
+                    <table class="custom-table" id="table-raw-preview">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Timestamp</th>
+                                <th>CPU Usage (%)</th>
+                                <th>Memory (%)</th>
+                                <th>Storage (%)</th>
+                                <th>Network In (Mbps)</th>
+                                <th>Network Out (Mbps)</th>
+                                <th>Latency (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-raw-preview">
+                            <tr><td colspan="8" class="text-center">Loading telemetry records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <div class="footer-left">
+            <span><strong>CloudPulse AI</strong> &copy; 2026. High-assurance autonomous cloud monitoring.</span>
+        </div>
+        <div class="footer-right">
+            <span>Powered by Python Flask, pandas, NumPy &amp; Chart.js</span>
+        </div>
+    </footer>
+
+    <!-- ======================================================== -->
+    <!-- MODALS -->
+    <!-- ======================================================== -->
+
+    <!-- CSV Upload Modal -->
+    <div class="modal-overlay" id="modal-upload">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Upload Custom Telemetry CSV</h3>
+                <button class="btn-close-modal" id="btn-close-upload">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">
+                    Upload your cloud performance dataset. Supported columns: 
+                    <code>timestamp</code>, <code>cpu_usage</code>, <code>memory_usage</code>, <code>storage_usage</code>, <code>network_in_mbps</code>, <code>network_out_mbps</code>, <code>latency_ms</code>.
+                </p>
+
+                <div class="drop-zone" id="drop-zone">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="drop-icon">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p class="drop-text">Drag &amp; drop your CSV file here, or click to browse</p>
+                    <input type="file" id="file-input-csv" accept=".csv" class="file-input-hidden">
+                </div>
+
+                <div class="upload-file-status" id="upload-status-display" style="display: none;">
+                    <span id="selected-file-name">No file selected</span>
+                    <span id="selected-file-size"></span>
+                </div>
+
+                <div class="sample-download-helper">
+                    <span>Need a reference template?</span>
+                    <button class="btn-link" id="btn-modal-sample-dl">Download Sample CSV</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-upload">Cancel</button>
+                <button class="btn btn-cyan" id="btn-submit-upload" disabled>Process &amp; Load Dataset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Configuration Modal -->
+    <div class="modal-overlay" id="modal-alerts">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Configurable System Alert Thresholds</h3>
+                <button class="btn-close-modal" id="btn-close-alerts">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">
+                    Tune operational limits for automated telemetry alarms and AI scaling triggers.
+                </p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="input-thresh-cpu">CPU Warning Threshold (%)</label>
+                        <input type="number" id="input-thresh-cpu" class="custom-input" min="10" max="100" value="80">
+                        <span class="form-hint">Triggers compute scaling when exceeded.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-thresh-mem">Memory Warning Threshold (%)</label>
+                        <input type="number" id="input-thresh-mem" class="custom-input" min="10" max="100" value="80">
+                        <span class="form-hint">Alerts on potential container OOM conditions.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-thresh-disk">Storage Threshold (%)</label>
+                        <input type="number" id="input-thresh-disk" class="custom-input" min="10" max="100" value="75">
+                        <span class="form-hint">Advises EBS volume expansion.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-thresh-net">Network Surge Limit (Mbps)</label>
+                        <input type="number" id="input-thresh-net" class="custom-input" min="50" max="2000" value="600">
+                        <span class="form-hint">Flags ingress bandwidth saturation.</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="input-thresh-zscore">CO3 Spike Sensitivity ($Z$-score)</label>
+                        <input type="number" id="input-thresh-zscore" class="custom-input" min="1.0" max="4.0" step="0.1" value="2.0">
+                        <span class="form-hint">Number of standard deviations above moving baseline.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-alerts">Cancel</button>
+                <button class="btn btn-cyan" id="btn-save-alerts">Save &amp; Apply Thresholds</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CO3 & CO5 Educational Guide Modal -->
+    <div class="modal-overlay" id="modal-guide">
+        <div class="modal-card modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title">Architectural Guide: CO3 &amp; CO5 Deep-Dive</h3>
+                <button class="btn-close-modal" id="btn-close-guide">&times;</button>
+            </div>
+            <div class="modal-body modal-scrollable">
+                <div class="guide-section">
+                    <div class="guide-tag-title">
+                        <span class="badge-tag co3-tag">CO3</span>
+                        <h4>Uncertain Network Traffic Prediction &amp; Dynamic Anomaly Bounds</h4>
+                    </div>
+                    <p>
+                        <strong>Theoretical Foundation:</strong> In distributed cloud systems, network ingress is a non-stationary, stochastic time-series. 
+                        Unlike CPU or storage which ramp up gradually with thread contention, network packets exhibit Poisson bursts, heavy-tailed distributions, 
+                        and sudden traffic impulses (e.g. batch replication, flash crowds, distributed denial-of-service).
+                    </p>
+                    <div class="guide-bullets">
+                        <div class="bullet-item">
+                            <span class="bullet-num">1</span>
+                            <div>
+                                <strong>Why Deterministic Point Forecasts Fail:</strong>
+                                A single projected scalar number (e.g., "Expected: 320 Mbps") provides zero insight into operational volatility. 
+                                Operating systems and autoscalers make disastrous provisioning decisions if they assume static variance.
+                            </div>
+                        </div>
+                        <div class="bullet-item">
+                            <span class="bullet-num">2</span>
+                            <div>
+                                <strong>Transparent Uncertainty Visualization:</strong>
+                                CloudPulse AI computes a rolling expectation baseline $\mu_t$ and rolling volatility $\sigma_t$. 
+                                The upper bound $\text{UB}_t = \mu_t + k \cdot \sigma_t$ and lower bound $\text{LB}_t = \max(0, \mu_t - k \cdot \sigma_t)$ 
+                                create a dynamic confidence corridor. If traffic breaches $\text{UB}_t$, the surge is declared statistically significant.
+                            </div>
+                        </div>
+                        <div class="bullet-item">
+                            <span class="bullet-num">3</span>
+                            <div>
+                                <strong>Practical SLA &amp; Auto-scaling Application:</strong>
+                                By visualizing confidence bandwidth, cloud engineers distinguish between natural diurnal traffic oscillations and anomalous DDoS pulses.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="guide-divider">
+
+                <div class="guide-section">
+                    <div class="guide-tag-title">
+                        <span class="badge-tag co5-tag">CO5</span>
+                        <h4>Chronological Model Validation: Preventing Lookahead Bias</h4>
+                    </div>
+                    <p>
+                        <strong>Theoretical Foundation:</strong> Machine learning practitioners often apply standard $k$-fold cross-validation by default. 
+                        However, when applied to sequential time-series telemetry, <strong>random shuffling creates catastrophic data leakage</strong>.
+                    </p>
+                    <div class="guide-bullets">
+                        <div class="bullet-item">
+                            <span class="bullet-num">1</span>
+                            <div>
+                                <strong>The Temporal Invariance Requirement:</strong>
+                                Time moves in a single direction ($t_0 < t_1 < \dots < t_n$). In production, a predictive model at time $t$ can only utilize knowledge prior to $t$. 
+                                If randomly split, the test set evaluates timestamps whose surrounding future points were already seen during training.
+                            </div>
+                        </div>
+                        <div class="bullet-item">
+                            <span class="bullet-num">2</span>
+                            <div>
+                                <strong>Rigorous Chronological Partitioning:</strong>
+                                In CloudPulse AI, data is strictly segmented into an antecedent training period $[0, T_{split}]$ and an out-of-sample future evaluation horizon $(T_{split}, N]$.
+                            </div>
+                        </div>
+                        <div class="bullet-item">
+                            <span class="bullet-num">3</span>
+                            <div>
+                                <strong>Comparative Metric Mechanics (MAE vs. RMSE):</strong>
+                                <ul>
+                                    <li><strong>Mean Absolute Error (MAE):</strong> $\frac{1}{m}\sum |y_i - \hat{y}_i|$ assigns a linear penalty. It represents the average magnitude of prediction error in native metric units (e.g. Mbps).</li>
+                                    <li><strong>Root Mean Squared Error (RMSE):</strong> $\sqrt{\frac{1}{m}\sum (y_i - \hat{y}_i)^2}$ squares residuals before averaging. It severely penalizes occasional massive misses, making it the premier metric for mission-critical cloud capacity guarantees.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cyan" id="btn-dismiss-guide">Understood &amp; Return to Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
